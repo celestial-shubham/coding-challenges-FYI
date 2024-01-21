@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "../build-test",
+        "allowJs": true,
+        "target": "es2017",
+        "skipLibCheck": true,
+        "strict": false,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "module": "commonjs",
+        "noImplicitAny" : false,
+        "skipDefaultLibCheck": true,
+        "alwaysStrict" : false,
+        "resolveJsonModule": true,
+        "experimentalDecorators": true,
+    },
+    "include": [ "../src//**/*", "../test//**/*" ]
+}
