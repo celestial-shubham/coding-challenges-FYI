@@ -1,8 +1,10 @@
 .idea/**
 **/node_modules/**
 **/build/**
+**/build-test/**
 .vscode/**
 coverage/**
 logs/**
 **/*.env
 *.js
+*.map
