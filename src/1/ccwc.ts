@@ -77,81 +77,66 @@ function wordCount(fileContents: string): number {
  * @return {Promise<string>} A promise that resolves to a string containing the
  * count(s) and the filename or an error message.
  */
-// ccwc
 export async function ccwc(
   argv: string[],
   stream?: NodeJS.ReadStream | fs.ReadStream
 ): Promise<string> {
-  if (argv.length === 2) {
-    const option = argv[0];
-    const filename = argv[1];
-    if (fs.existsSync(filename)) {
-      const fileContents: string = fs.readFileSync(filename, 'utf8').toString();
-      switch (option) {
-        case '-c':
-          return byteCount(filename).toString() + ' ' + filename;
-        case '-l':
-          return lineCount(fileContents).toString() + ' ' + filename;
-        case '-w':
-          return wordCount(fileContents).toString() + ' ' + filename;
-        case '-m':
-          return charCount(fileContents) + ' ' + filename;
-        default:
-          throw new Error('Invalid option');
-      }
-    }
-    if (_LH.isUndefined(stream)) {
-      throw new Error('Invalid file');
-    }
-  }
-
-  if (argv.length === 1) {
-    const filename = argv[0];
-    if (fs.existsSync(filename)) {
-      const fileContents = fs.readFileSync(filename, 'utf8');
-      const line = lineCount(fileContents).toString();
-      const word = wordCount(fileContents).toString();
-      const bytes = byteCount(filename).toString();
-      return line + ' ' + word + ' ' + bytes + ' ' + filename;
-    }
-    if (_LH.isUndefined(stream)) {
-      throw new Error('Invalid file');
-    }
-  }
-
-  // Checking for stream
+  const filename = argv[argv.length - 1];
+  let fileContents: string;
   if (!_LH.isUndefined(stream)) {
-    try {
-      // If option is given
-      const buffer: Buffer = await readStream(stream);
-      const fileContents: string = buffer.toString();
-      if (argv.length === 1) {
-        const option = argv[0];
-        switch (option) {
-          case '-c':
-            return buffer.length.toString();
-          case '-l':
-            return lineCount(fileContents).toString();
-          case '-w':
-            return wordCount(fileContents).toString();
-          case '-m':
-            return charCount(fileContents).toString();
-          default:
-            throw new Error('Invalid option');
-        }
-      }
-      // If no option is given
-      if (argv.length == 0) {
-        const line = lineCount(fileContents).toString();
-        const word = wordCount(fileContents).toString();
-        const bytes = buffer.length.toString();
-        return line + ' ' + word + ' ' + bytes;
-      }
-    } catch (err) {
-      if (!(err instanceof TypeError)) {
-        throw err;
-      }
-    }
+    const buffer: Buffer = await readStream(stream);
+    fileContents = buffer.toString();
+  } else {
+    fileContents = fs.readFileSync(filename).toString();
+  }
+
+  if (stream && argv.length === 1) {
+    return getStreamCounts(argv[0], fileContents, stream);
+  }
+  if (fs.existsSync(filename)) {
+    return getFileCounts(argv[0], fileContents, filename);
   }
   throw new Error('Invalid input or file');
+}
+
+async function getStreamCounts(
+  option: string,
+  fileContents: string,
+  stream: NodeJS.ReadStream | fs.ReadStream
+): Promise<string> {
+  switch (option) {
+    case '-c':
+      return (
+        stream instanceof fs.ReadStream
+          ? (await fs.promises.stat(stream.path)).size
+          : 0
+      ).toString();
+    case '-l':
+      return lineCount(fileContents).toString();
+    case '-w':
+      return wordCount(fileContents).toString();
+    case '-m':
+      return charCount(fileContents).toString();
+    default:
+      throw new Error('Invalid option');
+  }
+}
+
+function getFileCounts(
+  option: string,
+  fileContents: string,
+  filename: string
+): string {
+  switch (option) {
+    case '-c':
+      return byteCount(filename).toString() + ' ' + filename;
+    case '-l':
+      return lineCount(fileContents).toString() + ' ' + filename;
+    case '-w':
+      return wordCount(fileContents).toString() + ' ' + filename;
+    case '-m':
+      return charCount(fileContents).toString() + ' ' + filename;
+    default:
+      throw new Error('Invalid option');
+  }
 }
